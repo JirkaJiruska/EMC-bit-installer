@@ -1,0 +1,95 @@
+;Copyright PassMark Software 2003-2011
+; Installation inf for PassMark USB2 Loopback
+; http://www.passmark.com
+;
+
+[Version] 
+;Signature = "$CHICAGO$" 
+Signature="$Windows NT$"
+Class=USB
+ClassGUID={36fc9e60-c465-11cf-8056-444553540000}
+Provider=%PassMark% 
+CatalogFile.NTamd64=pmusb2amd64.cat
+DriverVer=3/25/2011,7.0.1001.0
+
+[Manufacturer]
+%PassMark%=PassMark,NTamd64
+
+[DestinationDirs]
+DefaultDestDir=10,System32\Drivers
+PMUSB.SysFiles=10,System32\Drivers
+
+[PMUSB.SysFiles]
+PMUSB.sys
+pmusbp.sys
+
+[SourceDisksFiles]
+PMUSB.sys = 1
+pmusbp.sys=1
+
+[SourceDisksNames]
+1=%DriversDisk%,,,
+
+[ControlFlags]
+ExcludeFromSelect=*
+
+[ClassInstall32]
+DelFiles=PMUSBUSB.SysFiles
+;DelFiles=PMUSBUSB.SysFiles,PMUSB.DLLFiles
+AddReg=ClassInstall32.AddReg
+
+;[ClassInstall32.AddReg]
+;HKR,,,0,%ClassDesc%
+
+
+;[PassMark.NT]
+;%USB\VID_0403&PID_FF0A.DeviceDesc%=PMUSB, USB\VID_0403&PID_FF0A
+
+[PassMark.NTamd64]
+%USB\VID_0403&PID_FF0A.DeviceDesc%=PMUSB, USB\VID_0403&PID_FF0A
+
+
+;[PMUSB.NT]
+;CopyFiles=PMUSB.SysFiles
+
+[PMUSB.NTamd64]
+CopyFiles=PMUSB.SysFiles
+
+
+;[PMUSB.NT.Services]
+;the first parameter is the name of the service in 
+;HKLM\system\CurrentControlSet\Services
+;Addservice = PMUSB2G, 0x00000002, PMUSB.AddService
+
+[PMUSB.NTamd64.Services]
+;the first parameter is the name of the service in 
+;HKLM\system\CurrentControlSet\Services
+Addservice = PMUSB2G, 0x00000002, PMUSB.AddService
+
+
+[PMUSB.AddService]
+DisplayName    = %PMUSB.SvcDesc%
+ServiceType    = 1                  ; SERVICE_KERNEL_DRIVER
+StartType      = 3                  ; SERVICE_DEMAND_START  
+ErrorControl   = 1                  ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %10%\System32\Drivers\PMUSB.sys
+AddReg=PMUSB.AddReg
+
+[PMUSB.AddReg]
+HKR,,ClassGUID,0,%PMUSBClassGUID%
+
+;==============================================================;
+
+
+[Strings]
+
+;  *******Localizable Strings******* 
+PassMark= "PassMark Software"
+ConfigKey="VID_0403&PID_FF0A"
+USB\VID_0403&PID_FF0A.DeviceDesc="PassMark USB2.0 Loopback plug"
+PMUSB.SvcDesc="PassMark USB2.0 Loopback plug driver"
+DriversDisk="PassMark USB2.0 Driver Installation Disk"
+ClassDesc="PMUSB Devices"
+PMUSBClassGUID="{adf9d809-2fa1-4409-91a3-79c8877af7b0}"
+
+PMUSB="USB2 driver (PMUSB.sys)"

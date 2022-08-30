@@ -1,0 +1,116 @@
+;
+; IGLx.inf
+;
+
+[Version]
+Signature="$WINDOWS NT$"
+Class=PCIe Endpoint ; TODO: edit Class
+ClassGuid={2C821652-B4DC-4FFE-8BE6-EC699997DBD5};   TODO: edit ClassGuid
+
+Provider=%PSMK% ; typically this is specified as OrganizationNaem token that is expanded later in the INF files STRINGS section
+CatalogFile=IGLx.cat
+DriverVer=03/27/2018,2.0.1000.2
+
+[DestinationDirs]
+DefaultDestDir = 12
+
+; ================= Class section =====================
+
+[ClassInstall32]
+Addreg=SampleClassReg
+
+[SampleClassReg]
+HKR,,,0,%ClassName%
+HKR,,Icon,,-5		; assigns generic icon in device manager
+
+[SourceDisksNames]
+1 = %DiskName%,,,""
+
+[SourceDisksFiles]
+IGLx.sys  = 1,,
+
+;*****************************************
+; Install Section
+;*****************************************
+
+[Manufacturer]
+%PSMK%=Standard,NTamd64
+
+[Standard.NTamd64]
+;%IGLx.DeviceDesc%=IGLx_Device, Root\IGLx ; TODO: edit hw-id (original toaster)
+; DisplayName			Section				DeviceId						
+; -------------			-----------			--------
+%IGLx.DeviceDesc%=		IGLx_Device,		PCI\VEN_11AA&DEV_11AA;
+%IGLx.DeviceDesc%=		IGLx_Device,		PCI\VEN_0403&DEV_FF0C;
+
+
+[IGLx_Device.NT]
+CopyFiles=Drivers_Dir
+
+[Drivers_Dir]
+IGLx.sys
+
+;-------------- Service installation
+[IGLx_Device.NT.Services]
+AddService = IGLx,%SPSVCINST_ASSOCSERVICE%, IGLx_Service_Inst
+
+;-------------- MSI Enable
+[IGLx_Device.NT.HW] 
+; ".HW" suffix allows the Bus manager to modify the pcie config addresses 
+; in the device and create the appropriate MSI interrupt resource descriptor,
+; which must be hooked by the driver
+AddReg = Security-addreg-section
+AddReg = MSI-addreg-section
+
+[Security-addreg-section]
+HKR,,DeviceCharacteristics,0x10001,0x100     ;Use same security checks on relative opens 
+HKR,,Security,,"D:P(A;;GA;;;SY)(A;;GRGWGX;;;BA)(A;;GRGWGX;;;WD)(A;;GRGWGX;;;RC)"  ; Allow generic all access to system, RWX access to built-in Admin, World and RC .
+
+[MSI-addreg-section]
+HKR,Interrupt Management,,0x00000010 ; create Interrupt Management key
+HKR,Interrupt Management\MessageSignaledInterruptProperties,,0x00000010 ; create MSIProperties key
+HKR,Interrupt Management\MessageSignaledInterruptProperties,MSISupported,0x00010001,1
+HKR,Interrupt Management\MessageSignaledInterruptProperties,MessageNumberLimit,0x00010001,2
+HKR,Interrupt Management\Affinity Policy, DevicePolicy, 0x00010001, 2
+
+; -------------- IGLx driver install sections
+[IGLx_Service_Inst]
+DisplayName    = %IGLx.SVCDESC%
+ServiceType    = 1               ; SERVICE_KERNEL_DRIVER
+StartType      = 3               ; SERVICE_DEMAND_START
+ErrorControl   = 1               ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %12%\IGLx.sys
+LoadOrderGroup = Extended Base
+
+;
+;--- IGLx_Device Coinstaller installation ------
+;
+
+[DestinationDirs]
+IGLx_Device_CoInstaller_CopyFiles = 11
+
+[IGLx_Device.NT.CoInstallers]
+AddReg=IGLx_Device_CoInstaller_AddReg
+CopyFiles=IGLx_Device_CoInstaller_CopyFiles
+
+[IGLx_Device_CoInstaller_AddReg]
+HKR,,CoInstallers32,0x00010000, "WdfCoInstaller01011.dll,WdfCoInstaller"
+
+[IGLx_Device_CoInstaller_CopyFiles]
+WdfCoInstaller01011.dll
+
+[SourceDisksFiles]
+WdfCoInstaller01011.dll=1 ; make sure the number matches with SourceDisksNames
+
+[IGLx_Device.NT.Wdf]
+KmdfService =  IGLx, IGLx_wdfsect
+[IGLx_wdfsect]
+KmdfLibraryVersion = 1.11
+
+[Strings]
+SPSVCINST_ASSOCSERVICE= 0x00000002
+PSMK="PassMark" ; TODO: add ManufacturerName
+ClassName="PCIe Endpoint" ; TODO: edit ClassName
+DiskName = "PM PCIe Installation Disk"
+IGLx.DeviceDesc = "PassMark PCIe 2.0 Test Card"
+IGLx.SVCDESC = "PassMark PCIe Service"
